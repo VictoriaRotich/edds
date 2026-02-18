@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EDDS - Sierra Leone Early Detection Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, #1a5f23 0%, #2e8b57 100%);
+            color: white;
+            padding: 1.2rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo {
+            width: 50px;
+            height: 50px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a5f23;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .header-title h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .header-title p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 8px 15px;
+            border-radius: 50px;
+        }
+        
+        .user-info i {
+            font-size: 1.2rem;
+        }
+        
+        /* Main Layout */
+        .container {
+            display: flex;
+            min-height: calc(100vh - 90px);
+        }
+        
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+        
+        .nav-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: #666;
+            padding: 0 1.5rem;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+        
+        .nav-links {
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-bottom: 3px;
+        }
+        
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 1.5rem;
+            text-decoration: none;
+            color: #444;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+        
+        .nav-links a:hover {
+            background-color: #f0f7f2;
+            color: #1a5f23;
+        }
+        
+        .nav-links a.active {
+            background-color: #e8f4ea;
+            color: #1a5f23;
+            border-left: 4px solid #1a5f23;
+            font-weight: 600;
+        }
+        
+        .nav-links i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+        
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .page-header h2 {
+            color: #1a5f23;
+            font-size: 1.6rem;
+        }
+        
+        .last-update {
+            font-size: 0.85rem;
+            color: #666;
+            background-color: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        
+        /* Alert Banner */
+        .alert-banner {
+            background-color: #fff8e1;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 1.5rem;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-banner.warning {
+            background-color: #fff8e1;
+            border-left-color: #ffc107;
+        }
+        
+        .alert-banner.critical {
+            background-color: #ffebee;
+            border-left-color: #f44336;
+        }
+        
+        /* Dashboard Cards */
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            transition: transform 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+        
+        .card-icon.health {
+            background-color: #e74c3c;
+        }
+        
+        .card-icon.food {
+            background-color: #f39c12;
+        }
+        
+        .card-icon.water {
+            background-color: #3498db;
+        }
+        
+        .card-icon.agriculture {
+            background-color: #2ecc71;
+        }
+        
+        .card-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-change {
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .card-change.positive {
+            color: #2ecc71;
+        }
+        
+        .card-change.negative {
+            color: #e74c3c;
+        }
+        
+        /* Map Container */
+        .map-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            height: 500px;
+        }
+        
+        .map-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        #sierra-leone-map {
+            height: 400px;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        /* Charts Container */
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+        
+        /* Data Sources */
+        .data-sources {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .data-sources h3 {
+            color: #1a5f23;
+            margin-bottom: 1rem;
+        }
+        
+        .source-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .source-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #f9f9f9;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .source-item i {
+            color: #1a5f23;
+        }
+        
+        /* Page Content */
+        .page-content {
+            display: none;
+        }
+        
+        .page-content.active {
+            display: block;
+        }
+        
+        /* Table Styles */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .data-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .data-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .region-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .badge-critical {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .badge-warning {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+        
+        .badge-monitor {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: #666;
+            font-size: 0.85rem;
+            border-top: 1px solid #eee;
+            margin-top: 2rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 70px;
+                padding: 1rem 0;
+            }
+            
+            .nav-title, .nav-links span {
+                display: none;
+            }
+            
+            .nav-links a {
+                justify-content: center;
+                padding: 15px 0;
+            }
+            
+            .nav-links i {
+                font-size: 1.2rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-title h1 {
+                font-size: 1.4rem;
+            }
+            
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                padding: 0;
+                flex-direction: row;
+                overflow-x: auto;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            }
+            
+            .nav-section {
+                margin-bottom: 0;
+                flex-shrink: 0;
+            }
+            
+            .nav-links {
+                display: flex;
+            }
+            
+            .nav-links li {
+                margin-bottom: 0;
+            }
+            
+            .nav-links a {
+                padding: 15px 20px;
+                border-left: none;
+                border-bottom: 3px solid transparent;
+            }
+            
+            .nav-links a.active {
+                border-left: none;
+                border-bottom: 3px solid #1a5f23;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo-container">
+            <div class="logo">EDDS</div>
+            <div class="header-title">
+                <h1>Early Detection & Response Dashboard</h1>
+                <p>Sierra Leone - Community-Based Monitoring Network</p>
+            </div>
+        </div>
+        <div class="user-info">
+            <i class="fas fa-user-shield"></i>
+            <span>Authorized User (Gov/WHO)</span>
+        </div>
+    </header>
+    
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="nav-section">
+                <div class="nav-title">Dashboard</div>
+                <ul class="nav-links">
+                    <li><a href="#" class="active" data-page="main"><i class="fas fa-home"></i> <span>Main Dashboard</span></a></li>
+                    <li><a href="#" data-page="health"><i class="fas fa-heartbeat"></i> <span>Health Indicators</span></a></li>
+                    <li><a href="#" data-page="food"><i class="fas fa-utensils"></i> <span>Food Security</span></a></li>
+                    <li><a href="#" data-page="agriculture"><i class="fas fa-tractor"></i> <span>Agriculture</span></a></li>
+                    <li><a href="#" data-page="water"><i class="fas fa-tint"></i> <span>Water & WASH</span></a></li>
+                    <li><a href="#" data-page="markets"><i class="fas fa-chart-line"></i> <span>Market Prices</span></a></li>
+                </ul>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">EDDS Components</div>
+                <ul class="nav-links">
+                    <li><a href="#" data-page="monitoring"><i class="fas fa-binoculars"></i> <span>Monitoring Network</span></a></li>
+                    <li><a href="#" data-page="data"><i class="fas fa-database"></i> <span>Data Collection</span></a></li>
+                    <li><a href="#" data-page="response"><i class="fas fa-first-aid"></i> <span>Response Mechanism</span></a></li>
+                    <li><a href="#" data-page="capacity"><i class="fas fa-graduation-cap"></i> <span>Capacity Building</span></a></li>
+                </ul>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">Reports</div>
+                <ul class="nav-links">
+                    <li><a href="#" data-page="reports"><i class="fas fa-file-alt"></i> <span>Generate Reports</span></a></li>
+                    <li><a href="#" data-page="export"><i class="fas fa-download"></i> <span>Export Data</span></a></li>
+                </ul>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Main Dashboard Page -->
+            <div id="main" class="page-content active">
+                <div class="page-header">
+                    <h2><i class="fas fa-map-marker-alt"></i> Sierra Leone - Early Warning Overview</h2>
+                    <div class="last-update">Last updated: <span id="update-time">Today, 10:45 AM</span> via USSD</div>
+                </div>
+                
+                <!-- Alert Banner -->
+                <div class="alert-banner warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Alert:</strong> 3 districts have reached vulnerability thresholds requiring intervention. 
+                        <a href="#" style="color: #1a5f23; font-weight: 600;">View response recommendations</a>
+                    </div>
+                </div>
+                
+                <!-- Dashboard Cards -->
+                <div class="dashboard-cards">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Cholera Cases</div>
+                            <div class="card-icon health">
+                                <i class="fas fa-virus"></i>
+                            </div>
+                        </div>
+                        <div class="card-value" id="cholera-cases">142</div>
+                        <div class="card-change negative">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>12% increase this month</span>
+                        </div>
+                        <div class="card-detail">Reported in 4 districts</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Food Insecure Households</div>
+                            <div class="card-icon food">
+                                <i class="fas fa-bread-slice"></i>
+                            </div>
+                        </div>
+                        <div class="card-value" id="food-insecure">3,842</div>
+                        <div class="card-change negative">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>8% increase this month</span>
+                        </div>
+                        <div class="card-detail">Affecting 12% of monitored population</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Water Scarcity Reports</div>
+                            <div class="card-icon water">
+                                <i class="fas fa-water"></i>
+                            </div>
+                        </div>
+                        <div class="card-value" id="water-scarcity">67</div>
+                        <div class="card-change positive">
+                            <i class="fas fa-arrow-down"></i>
+                            <span>5% decrease this month</span>
+                        </div>
+                        <div class="card-detail">Mostly in Northern Province</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Crop Stress Reports</div>
+                            <div class="card-icon agriculture">
+                                <i class="fas fa-seedling"></i>
+                            </div>
+                        </div>
+                        <div class="card-value" id="crop-stress">289</div>
+                        <div class="card-change negative">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>15% increase this month</span>
+                        </div>
+                        <div class="card-detail">Due to delayed rains</div>
+                    </div>
+                </div>
+                
+                <!-- Map Container -->
+                <div class="map-container">
+                    <div class="map-header">
+                        <h3><i class="fas fa-map"></i> Sierra Leone - Risk Hotspots Map</h3>
+                        <div style="font-size: 0.9rem; color: #666;">
+                            <span style="background-color: #ffebee; padding: 3px 8px; border-radius: 4px; margin-right: 10px;">Critical</span>
+                            <span style="background-color: #fff8e1; padding: 3px 8px; border-radius: 4px; margin-right: 10px;">Warning</span>
+                            <span style="background-color: #e8f5e9; padding: 3px 8px; border-radius: 4px;">Monitor</span>
+                        </div>
+                    </div>
+                    <div id="sierra-leone-map"></div>
+                </div>
+                
+                <!-- Charts Container -->
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Monthly Cholera Cases by District</div>
+                            <select id="cholera-period" style="padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+                                <option>Last 3 months</option>
+                                <option>Last 6 months</option>
+                                <option>Last year</option>
+                            </select>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="cholera-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Food Security Indicators Trend</div>
+                            <select id="food-period" style="padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+                                <option>Last 3 months</option>
+                                <option>Last 6 months</option>
+                                <option>Last year</option>
+                            </select>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="food-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Data Sources -->
+                <div class="data-sources">
+                    <h3><i class="fas fa-mobile-alt"></i> Data Sources</h3>
+                    <div class="source-list">
+                        <div class="source-item">
+                            <i class="fas fa-satellite-dish"></i>
+                            <span>USSD Reports from CHVs</span>
+                        </div>
+                        <div class="source-item">
+                            <i class="fas fa-users"></i>
+                            <span>Community Volunteer Observations</span>
+                        </div>
+                        <div class="source-item">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Paper-based Reports</span>
+                        </div>
+                        <div class="source-item">
+                            <i class="fas fa-hospital"></i>
+                            <span>Health Facility Data</span>
+                        </div>
+                        <div class="source-item">
+                            <i class="fas fa-shopping-basket"></i>
+                            <span>Market Price Monitoring</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Health Indicators Page -->
+            <div id="health" class="page-content">
+                <div class="page-header">
+                    <h2><i class="fas fa-heartbeat"></i> Health Indicators Monitoring</h2>
+                    <div class="last-update">Last updated: Today, 10:45 AM</div>
+                </div>
+                
+                <div class="alert-banner critical">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <div>
+                        <strong>Critical:</strong> Cholera outbreak reported in Western Area (Urban). Response team activated.
+                    </div>
+                </div>
+                
+                <div class="dashboard-cards">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Active Cholera Cases</div>
+                            <div class="card-icon health">
+                                <i class="fas fa-virus"></i>
+                            </div>
+                        </div>
+                        <div class="card-value">142</div>
+                        <div class="card-change negative">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>12% increase</span>
+                        </div>
+                        <div class="card-detail">Western Area: 87 cases</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Child Malnutrition (GAM)</div>
+                            <div class="card-icon health">
+                                <i class="fas fa-child"></i>
+                            </div>
+                        </div>
+                        <div class="card-value">8.2%</div>
+                        <div class="card-change negative">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>1.2% increase</span>
+                        </div>
+                        <div class="card-detail">Above emergency threshold (8%)</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Malaria Cases</div>
+                            <div class="card-icon health">
+                                <i class="fas fa-mosquito"></i>
+                            </div>
+                        </div>
+                        <div class="card-value">2,415</div>
+                        <div class="card-change positive">
+                            <i class="fas fa-arrow-down"></i>
+                            <span>5% decrease</span>
+                        </div>
+                        <div class="card-detail">Seasonal decrease expected</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">CHV Health Reports</div>
+                            <div class="card-icon health">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                        </div>
+                        <div class="card-value">489</div>
+                        <div class="card-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>15% increase in reporting</span>
+                        </div>
+                        <div class="card-detail">From 234 Community Health Volunteers</div>
+                    </div>
+                </div>
+                
+                <div class="chart-card" style="margin-top: 2rem;">
+                    <div class="chart-header">
+                        <div class="chart-title">Cholera Cases by District (Last 30 Days)</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="health-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="data-sources" style="margin-top: 2rem;">
+                    <h3><i class="fas fa-table"></i> Recent Health Reports from CHVs</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>District</th>
+                                <th>CHV ID</th>
+                                <th>Indicator</th>
+                                <th>Cases Reported</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Today</td>
+                                <td>Western Area Urban</td>
+                                <td>CHV-042</td>
+                                <td>Cholera</td>
+                                <td>12 new cases</td>
+                                <td><span class="region-badge badge-critical">Critical</span></td>
+                            </tr>
+                            <tr>
+                                <td>Yesterday</td>
+                                <td>Bo District</td>
+                                <td>CHV-117</td>
+                                <td>Child Malnutrition</td>
+                                <td>5 cases (GAM 9.2%)</td>
+                                <td><span class="region-badge badge-warning">Warning</span></td>
+                            </tr>
+                            <tr>
+                                <td>2 days ago</td>
+                                <td>Tonkolili</td>
+                                <td>CHV-089</td>
+                                <td>Malaria</td>
+                                <td>23 cases</td>
+                                <td><span class="region-badge badge-monitor">Monitor</span></td>
+                            </tr>
+                            <tr>
+                                <td>3 days ago</td>
+                                <td>Kambia</td>
+                                <td>CHV-156</td>
+                                <td>Diarrhea in children</td>
+                                <td>8 cases</td>
+                                <td><span class="region-badge badge-warning">Warning</span></td>
+                            </tr>
+                            <tr>
+                                <td>4 days ago</td>
+                                <td>Port Loko</td>
+                                <td>CHV-203</td>
+                                <td>Respiratory infections</td>
+                                <td>14 cases</td>
+                                <td><span class="region-badge badge-monitor">Monitor</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Food Security Page -->
+            <div id="food" class="page-content">
+                <div class="page-header">
+                    <h2><i class="fas fa-utensils"></i> Food Security Monitoring</h2>
+                    <div class="last-update">Last updated: Today, 10:45 AM</div>
+                </div>
+                
+                <div class="alert-banner warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Warning:</strong> 12% of monitored households now food insecure, exceeding 10% threshold in Northern Province.
+                    </div>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Household Food Security Status by District</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="food-security-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Food Stock Duration (Weeks of supply remaining)</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="food-stock-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="data-sources" style="margin-top: 2rem;">
+                    <h3><i class="fas fa-table"></i> Recent Food Security Reports</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>District</th>
+                                <th>% Food Insecure</th>
+                                <th>Avg. Food Stock (weeks)</th>
+                                <th>CHV Reports</th>
+                                <th>Trend</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Kambia</td>
+                                <td>15.2%</td>
+                                <td>2.1 weeks</td>
+                                <td>34 reports</td>
+                                <td><span style="color: #e74c3c;"><i class="fas fa-arrow-up"></i> Increasing</span></td>
+                                <td><span class="region-badge badge-critical">Critical</span></td>
+                            </tr>
+                            <tr>
+                                <td>Port Loko</td>
+                                <td>12.8%</td>
+                                <td>2.8 weeks</td>
+                                <td>28 reports</td>
+                                <td><span style="color: #e74c3c;"><i class="fas fa-arrow-up"></i> Increasing</span></td>
+                                <td><span class="region-badge badge-warning">Warning</span></td>
+                            </tr>
+                            <tr>
+                                <td>Bo District</td>
+                                <td>9.3%</td>
+                                <td>3.5 weeks</td>
+                                <td>41 reports</td>
+                                <td><span style="color: #f39c12;"><i class="fas fa-arrow-right"></i> Stable</span></td>
+                                <td><span class="region-badge badge-monitor">Monitor</span></td>
+                            </tr>
+                            <tr>
+                                <td>Western Area</td>
+                                <td>7.1%</td>
+                                <td>4.2 weeks</td>
+                                <td>39 reports</td>
+                                <td><span style="color: #2ecc71;"><i class="fas fa-arrow-down"></i> Improving</span></td>
+                                <td><span class="region-badge badge-monitor">Monitor</span></td>
+                            </tr>
+                            <tr>
+                                <td>Tonkolili</td>
+                                <td>11.5%</td>
+                                <td>2.5 weeks</td>
+                                <td>22 reports</td>
+                                <td><span style="color: #e74c3c;"><i class="fas fa-arrow-up"></i> Increasing</span></td>
+                                <td><span class="region-badge badge-warning">Warning</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- More pages would follow the same pattern -->
+            <!-- For brevity, I'm showing only main, health, and food pages -->
+            
+            <!-- Monitoring Network Page (simplified) -->
+            <div id="monitoring" class="page-content">
+                <div class="page-header">
+                    <h2><i class="fas fa-binoculars"></i> Community-Based Monitoring Network</h2>
+                </div>
+                
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <h3 style="color: #1a5f23; margin-bottom: 1rem;">A. Community-Based Monitoring Network</h3>
+                    <p>Local volunteers, youth groups, farmers, and community leaders are trained to observe and record early-warning indicators:</p>
+                    <ul style="margin-top: 1rem; padding-left: 1.5rem;">
+                        <li>Crop stress, delayed rains, and pest or disease outbreaks</li>
+                        <li>Livestock mortality or reduced productivity</li>
+                        <li>Declining household food stocks</li>
+                        <li>Price spikes for staple foods</li>
+                        <li>Water scarcity and WASH vulnerabilities</li>
+                        <li>Nutritional changes among infants and young children</li>
+                    </ul>
+                </div>
+                
+                <div class="dashboard-cards">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Active CHVs</div>
+                        </div>
+                        <div class="card-value">234</div>
+                        <div class="card-detail">Trained Community Health Volunteers</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Farm Monitors</div>
+                        </div>
+                        <div class="card-value">187</div>
+                        <div class="card-detail">Trained farmers observing crop conditions</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Youth Observers</div>
+                        </div>
+                        <div class="card-value">312</div>
+                        <div class="card-detail">Youth group members reporting</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Community Leaders</div>
+                        </div>
+                        <div class="card-value">89</div>
+                        <div class="card-detail">Providing contextual insights</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Other pages would be implemented similarly -->
+            
+        </main>
+    </div>
+    
+    <!-- Footer -->
+    <footer>
+        <p>EDDS - Sierra Leone | Data collected via USSD by CHVs | Access restricted to Government Officials and Authorized Agencies (e.g., WHO)</p>
+        <p>This dashboard is updated in real-time as Community Health Volunteers submit reports</p>
+    </footer>
+    
+    <script>
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize map
+            initMap();
+            
+            // Initialize charts
+            initCharts();
+            
+            // Setup navigation
+            setupNavigation();
+            
+            // Simulate live data updates
+            simulateLiveUpdates();
+        });
+        
+        // Initialize Sierra Leone map
+        function initMap() {
+            // Create a simple map centered on Sierra Leone
+            const map = L.map('sierra-leone-map').setView([8.4606, -11.7799], 7);
+            
+            // Add a tile layer (using OpenStreetMap)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Define district coordinates (simplified for demo)
+            const districts = [
+                {name: "Western Area Urban", coords: [8.484, -13.229], status: "critical", cases: 87},
+                {name: "Western Area Rural", coords: [8.333, -13.000], status: "warning", cases: 24},
+                {name: "Bo District", coords: [7.964, -11.738], status: "warning", cases: 15},
+                {name: "Bombali", coords: [9.042, -12.032], status: "monitor", cases: 8},
+                {name: "Kambia", coords: [9.125, -12.918], status: "critical", cases: 12},
+                {name: "Koinadugu", coords: [9.511, -11.439], status: "monitor", cases: 3},
+                {name: "Port Loko", coords: [8.767, -12.787], status: "warning", cases: 18},
+                {name: "Tonkolili", coords: [8.650, -11.650], status: "monitor", cases: 7},
+                {name: "Moyamba", coords: [8.158, -12.433], status: "monitor", cases: 5},
+                {name: "Pujehun", coords: [7.358, -11.486], status: "monitor", cases: 2}
+            ];
+            
+            // Define colors based on status
+            const statusColors = {
+                critical: '#e74c3c',
+                warning: '#f39c12',
+                monitor: '#2ecc71'
+            };
+            
+            // Add markers for each district
+            districts.forEach(district => {
+                const circle = L.circleMarker(district.coords, {
+                    color: statusColors[district.status],
+                    fillColor: statusColors[district.status],
+                    fillOpacity: 0.7,
+                    radius: 15 + (district.cases / 5)
+                }).addTo(map);
+                
+                circle.bindPopup(`
+                    <strong>${district.name}</strong><br>
+                    Status: <span style="color:${statusColors[district.status]}">${district.status.toUpperCase()}</span><br>
+                    Cholera Cases: ${district.cases}<br>
+                    Food Insecurity: ${getRandomInt(8, 18)}%<br>
+                    <a href="#" onclick="showDistrictDetail('${district.name}')">View details</a>
+                `);
+            });
+            
+            // Add legend
+            const legend = L.control({position: 'bottomright'});
+            legend.onAdd = function() {
+                const div = L.DomUtil.create('div', 'info legend');
+                div.innerHTML = `
+                    <h4>Risk Level</h4>
+                    <div><span style="background:${statusColors.critical}; width:12px; height:12px; display:inline-block; margin-right:5px;"></span> Critical</div>
+                    <div><span style="background:${statusColors.warning}; width:12px; height:12px; display:inline-block; margin-right:5px;"></span> Warning</div>
+                    <div><span style="background:${statusColors.monitor}; width:12px; height:12px; display:inline-block; margin-right:5px;"></span> Monitor</div>
+                `;
+                return div;
+            };
+            legend.addTo(map);
+        }
+        
+        // Initialize charts
+        function initCharts() {
+            // Cholera chart
+            const choleraCtx = document.getElementById('cholera-chart').getContext('2d');
+            new Chart(choleraCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Western Area', 'Bo', 'Port Loko', 'Kambia', 'Tonkolili', 'Others'],
+                    datasets: [{
+                        label: 'Cholera Cases',
+                        data: [87, 15, 18, 12, 7, 3],
+                        backgroundColor: [
+                            '#e74c3c', '#f39c12', '#f39c12', '#e74c3c', '#2ecc71', '#2ecc71'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Cases'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Food security chart
+            const foodCtx = document.getElementById('food-chart').getContext('2d');
+            new Chart(foodCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [
+                        {
+                            label: 'Food Insecure Households',
+                            data: [2800, 2950, 3100, 3350, 3620, 3842],
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Crop Stress Reports',
+                            data: [180, 195, 210, 235, 262, 289],
+                            borderColor: '#f39c12',
+                            backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Health chart for health page
+            const healthCtx = document.getElementById('health-chart')?.getContext('2d');
+            if (healthCtx) {
+                new Chart(healthCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Cholera', 'Malnutrition', 'Malaria', 'Diarrhea', 'Respiratory'],
+                        datasets: [{
+                            label: 'Cases Reported (Last 30 Days)',
+                            data: [142, 89, 2415, 156, 312],
+                            backgroundColor: [
+                                '#e74c3c', '#f39c12', '#3498db', '#9b59b6', '#1abc9c'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Food security chart for food page
+            const foodSecurityCtx = document.getElementById('food-security-chart')?.getContext('2d');
+            if (foodSecurityCtx) {
+                new Chart(foodSecurityCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Food Secure', 'Mildly Insecure', 'Moderately Insecure', 'Severely Insecure'],
+                        datasets: [{
+                            data: [68, 20, 8, 4],
+                            backgroundColor: [
+                                '#2ecc71',
+                                '#f1c40f',
+                                '#e67e22',
+                                '#e74c3c'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Food stock chart for food page
+            const foodStockCtx = document.getElementById('food-stock-chart')?.getContext('2d');
+            if (foodStockCtx) {
+                new Chart(foodStockCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Kambia', 'Port Loko', 'Bo', 'Western Area', 'Tonkolili'],
+                        datasets: [{
+                            label: 'Weeks of food supply remaining',
+                            data: [2.1, 2.8, 3.5, 4.2, 2.5],
+                            backgroundColor: [
+                                '#e74c3c',
+                                '#f39c12',
+                                '#f1c40f',
+                                '#2ecc71',
+                                '#f39c12'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Weeks'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Setup navigation between pages
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-links a');
+            const pageContents = document.querySelectorAll('.page-content');
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Get the target page
+                    const targetPage = this.getAttribute('data-page');
+                    
+                    // Update active nav link
+                    navLinks.forEach(navLink => navLink.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show target page
+                    pageContents.forEach(page => {
+                        page.classList.remove('active');
+                        if (page.id === targetPage) {
+                            page.classList.add('active');
+                        }
+                    });
+                });
+            });
+        }
+        
+        // Simulate live data updates (as if coming from USSD)
+        function simulateLiveUpdates() {
+            // Update the "last updated" time
+            const now = new Date();
+            const options = { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            };
+            const timeString = now.toLocaleTimeString('en-US', options);
+            document.getElementById('update-time').textContent = `Today, ${timeString}`;
+            
+            // Simulate changing values
+            setInterval(() => {
+                // Randomly update cholera cases
+                const choleraElement = document.getElementById('cholera-cases');
+                let currentCases = parseInt(choleraElement.textContent);
+                const change = Math.random() > 0.7 ? 1 : (Math.random() > 0.5 ? -1 : 0);
+                currentCases = Math.max(120, currentCases + change);
+                choleraElement.textContent = currentCases;
+                
+                // Update other metrics similarly
+                const metrics = ['food-insecure', 'water-scarcity', 'crop-stress'];
+                metrics.forEach(metric => {
+                    const element = document.getElementById(metric);
+                    if (element) {
+                        let currentValue = parseInt(element.textContent.replace(',', ''));
+                        const change = Math.random() > 0.6 ? 2 : (Math.random() > 0.3 ? -1 : 0);
+                        currentValue = Math.max(1, currentValue + change);
+                        element.textContent = currentValue.toLocaleString();
+                    }
+                });
+            }, 10000); // Update every 10 seconds
+        }
+        
+        // Utility function to get random integer
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        
+        // Show district detail (for map popup links)
+        function showDistrictDetail(districtName) {
+            // Switch to health page and show district data
+            document.querySelectorAll('.nav-links a').forEach(link => link.classList.remove('active'));
+            document.querySelector('[data-page="health"]').classList.add('active');
+            
+            document.querySelectorAll('.page-content').forEach(page => page.classList.remove('active'));
+            document.getElementById('health').classList.add('active');
+            
+            alert(`Showing detailed data for ${districtName}. In a full implementation, this would filter the dashboard to show data for the selected district.`);
+            return false;
+        }
+    </script>
+</body>
+</html>
