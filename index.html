@@ -32,12 +32,15 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
         }
         
         .logo-container {
             display: flex;
             align-items: center;
             gap: 15px;
+            flex: 1;
+            min-width: 250px;
         }
         
         .logo {
@@ -51,6 +54,7 @@
             color: #1a5f23;
             font-size: 24px;
             font-weight: bold;
+            flex-shrink: 0;
         }
         
         .header-title h1 {
@@ -74,6 +78,16 @@
         
         .user-info i {
             font-size: 1.2rem;
+        }
+        
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
         }
         
         /* Main Layout */
@@ -651,15 +665,59 @@
             .nav-links i {
                 font-size: 1.2rem;
             }
+            
+            .header-title h1 {
+                font-size: 1.4rem;
+            }
         }
         
         @media (max-width: 768px) {
+            header {
+                padding: 0.8rem 1rem;
+                gap: 1rem;
+            }
+            
+            .hamburger-btn {
+                display: block;
+                order: -1;
+            }
+            
+            .logo-container {
+                gap: 10px;
+                min-width: auto;
+                order: 0;
+            }
+            
+            .logo {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            
+            .header-title h1 {
+                font-size: 1.1rem;
+                margin-bottom: 2px;
+            }
+            
+            .header-title p {
+                font-size: 0.75rem;
+                display: none;
+            }
+            
+            .user-info {
+                display: none;
+            }
+            
             .dashboard-cards {
                 grid-template-columns: 1fr;
             }
             
-            .header-title h1 {
-                font-size: 1.4rem;
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .response-grid {
+                grid-template-columns: 1fr;
             }
             
             .container {
@@ -671,7 +729,24 @@
                 padding: 0;
                 flex-direction: row;
                 overflow-x: auto;
+                overflow-y: hidden;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                max-height: 60px;
+                position: relative;
+                z-index: 100;
+            }
+            
+            .sidebar.open {
+                flex-direction: column;
+                max-height: none;
+                overflow-x: visible;
+                overflow-y: auto;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background-color: white;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             }
             
             .nav-section {
@@ -679,8 +754,32 @@
                 flex-shrink: 0;
             }
             
+            .sidebar.open .nav-section {
+                margin-bottom: 0;
+                border-bottom: 1px solid #eee;
+            }
+            
+            .nav-title {
+                display: none;
+            }
+            
+            .sidebar.open .nav-title {
+                display: block;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                color: #666;
+                padding: 12px 1.5rem 8px 1.5rem;
+                margin-bottom: 0;
+                letter-spacing: 0.5px;
+            }
+            
             .nav-links {
                 display: flex;
+                flex-direction: row;
+            }
+            
+            .sidebar.open .nav-links {
+                flex-direction: column;
             }
             
             .nav-links li {
@@ -691,6 +790,21 @@
                 padding: 15px 20px;
                 border-left: none;
                 border-bottom: 3px solid transparent;
+                white-space: nowrap;
+            }
+            
+            .sidebar.open .nav-links a {
+                border-left: 4px solid transparent;
+                border-bottom: none;
+                padding: 12px 1.5rem;
+            }
+            
+            .nav-links span {
+                display: none;
+            }
+            
+            .sidebar.open .nav-links span {
+                display: inline;
             }
             
             .nav-links a.active {
@@ -698,8 +812,225 @@
                 border-bottom: 3px solid #1a5f23;
             }
             
-            .response-grid {
+            .sidebar.open .nav-links a.active {
+                border-left: 4px solid #1a5f23;
+                border-bottom: none;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .page-header h2 {
+                font-size: 1.3rem;
+            }
+            
+            .last-update {
+                font-size: 0.75rem;
+            }
+            
+            .map-container {
+                height: auto;
+                padding: 1rem;
+            }
+            
+            #sierra-leone-map {
+                height: 300px;
+            }
+            
+            .map-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .alert-banner {
+                padding: 12px;
+                gap: 8px;
+                font-size: 0.9rem;
+            }
+            
+            .alert-banner i {
+                font-size: 1.2rem;
+                flex-shrink: 0;
+            }
+            
+            .data-sources {
+                padding: 1rem;
+            }
+            
+            .source-list {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .source-item {
+                padding: 8px 12px;
+                font-size: 0.85rem;
+            }
+            
+            /* Table Responsive */
+            .data-table {
+                font-size: 0.85rem;
+            }
+            
+            .data-table th, .data-table td {
+                padding: 8px 10px;
+            }
+            
+            .data-table th {
+                font-size: 0.75rem;
+            }
+            
+            .chart-card {
+                padding: 1rem;
+            }
+            
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .chart-container {
+                height: 250px;
+            }
+            
+            .chart-header select {
+                width: 100%;
+            }
+            
+            .training-cards {
                 grid-template-columns: 1fr;
+            }
+            
+            .export-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                width: 95%;
+                max-width: 100%;
+                padding: 1.5rem 1rem;
+            }
+            
+            .btn {
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .card {
+                padding: 1rem;
+            }
+            
+            .card-value {
+                font-size: 1.8rem;
+            }
+            
+            .card-title {
+                font-size: 1rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            header {
+                padding: 0.6rem 0.8rem;
+            }
+            
+            .logo {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+            
+            .header-title h1 {
+                font-size: 0.95rem;
+            }
+            
+            .page-header h2 {
+                font-size: 1.1rem;
+            }
+            
+            .main-content {
+                padding: 0.8rem;
+            }
+            
+            .card {
+                padding: 0.8rem;
+            }
+            
+            .card-header {
+                margin-bottom: 0.8rem;
+            }
+            
+            .card-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+            
+            .card-value {
+                font-size: 1.5rem;
+            }
+            
+            .card-title {
+                font-size: 0.9rem;
+            }
+            
+            .dashboard-cards {
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            .chart-container {
+                height: 200px;
+            }
+            
+            .data-table {
+                font-size: 0.75rem;
+            }
+            
+            .data-table th, .data-table td {
+                padding: 6px 8px;
+            }
+            
+            .alert-banner {
+                padding: 10px;
+                font-size: 0.85rem;
+            }
+            
+            .last-update {
+                font-size: 0.7rem;
+            }
+            
+            .response-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .btn {
+                padding: 8px 12px;
+                font-size: 0.85rem;
+                width: 100%;
+            }
+            
+            #sierra-leone-map {
+                height: 250px;
+            }
+            
+            .modal-content {
+                padding: 1rem 0.8rem;
+            }
+            
+            .region-badge {
+                font-size: 0.75rem;
+                padding: 3px 8px;
             }
         }
     </style>
@@ -707,6 +1038,9 @@
 <body>
     <!-- Header -->
     <header>
+        <button class="hamburger-btn" id="hamburger-btn" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
         <div class="logo-container">
             <div class="logo">EDDS</div>
             <div class="header-title">
@@ -2280,6 +2614,20 @@
     </footer>
     
     <script>
+        // Mobile Menu Toggle
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('open');
+        }
+        
+        // Close sidebar when a nav link is clicked on mobile
+        function closeMenuOnNavigation() {
+            const sidebar = document.querySelector('.sidebar');
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+            }
+        }
+        
         // Dashboard Data and State
         const dashboardData = {
             ussdMenu: 0, // Current USSD menu level
@@ -2298,6 +2646,19 @@
             
             // Setup navigation
             setupNavigation();
+            
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', function(e) {
+                const sidebar = document.querySelector('.sidebar');
+                const hamburgerBtn = document.querySelector('.hamburger-btn');
+                
+                if (sidebar && hamburgerBtn && 
+                    !sidebar.contains(e.target) && 
+                    !hamburgerBtn.contains(e.target) &&
+                    window.innerWidth <= 768) {
+                    sidebar.classList.remove('open');
+                }
+            });
             
             // Simulate live data updates
             simulateLiveUpdates();
@@ -2826,6 +3187,9 @@
                             page.classList.add('active');
                         }
                     });
+                    
+                    // Close mobile menu after navigation
+                    closeMenuOnNavigation();
                 });
             });
         }
