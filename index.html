@@ -3052,14 +3052,25 @@
         
         // Response Mechanism Functions
         function escalateResponse(district) {
-            alert(`Response for ${district} has been escalated to the emergency response team. They will coordinate the required interventions.`);
-            
+            // Prepare WhatsApp Click-to-Chat link (international format without + or spaces)
+            const phone = '254727559219';
+            const message = `EDDS Alert: Response escalated for ${district}. Please coordinate immediate interventions. Time: ${new Date().toLocaleString()}`;
+            const waUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
+
+            // Open WhatsApp chat in a new tab/window (user will need to confirm send in WhatsApp)
+            window.open(waUrl, '_blank');
+
+            // Notify the user in the dashboard
+            alert(`Response for ${district} has been escalated and a WhatsApp notification opened to the response team.`);
+
             // Log the escalation
             dashboardData.exports.push({
                 type: 'response_escalation',
                 district: district,
                 timestamp: new Date().toISOString(),
-                user: 'Dashboard_User'
+                user: 'Dashboard_User',
+                via: 'whatsapp',
+                phone: phone
             });
         }
         
